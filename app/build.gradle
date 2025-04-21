@@ -1,0 +1,67 @@
+plugins {
+    id 'com.android.application'
+    id 'com.chaquo.python'
+}
+
+android {
+    namespace 'com.example.lyrichud'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.lyrichud"
+        minSdk 28
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        python {
+            // 这里指定 Python 版本
+            buildPython "C:/Users/10532/AppData/Local/Programs/Python/Python311/python.exe"
+            // 根据你的 Python 安装路径调整
+            pip {
+                install "Flask==3.0.3"
+                install "flask_cors==5.0.0"
+                install "Flask_SocketIO==5.5.1"
+                install "pyotp==2.9.0"
+                install "requests==2.32.3"
+                install "spotipy==2.25.1"
+                install "ll-kugou-lyric-api==0.1.3"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+}
+
+chaquopy {
+    sourceSets {
+        main {
+            srcDir "C:/mycode/vscode/lyrics"
+        }
+    }
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+}
