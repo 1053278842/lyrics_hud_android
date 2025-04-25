@@ -9,10 +9,13 @@ public class PythonBridge implements LyricsSyncer {
 
     private static PythonBridge instance;
     private final PyObject pyMain;
+    private final PyObject manager;
 
     private PythonBridge() {
         Python python = Python.getInstance();
         pyMain = python.getModule("main");
+        // 创建 LyricsSyncManager 实例
+        manager = pyMain.callAttr("KugouLyricManager");
     }
 
     public static synchronized PythonBridge getInstance() {
@@ -26,7 +29,7 @@ public class PythonBridge implements LyricsSyncer {
     @Override
     public void sendSongInfo(String id, long position, String image, boolean status, String title, String artist, long duration) {
         try {
-            pyMain.callAttr("send_kugou_lyrics", id, position, image, status, title, artist, duration);
+            manager.callAttr("send_kugou_lyrics", id, position, image, status, title, artist, duration);
         } catch (PyException e) {
             e.printStackTrace();
         }
@@ -35,7 +38,7 @@ public class PythonBridge implements LyricsSyncer {
     @Override
     public void sendPlayState(boolean status, long position) {
         try {
-            pyMain.callAttr("sync_play_state", status, position);
+            manager.callAttr("sync_play_state", status, position);
         } catch (PyException e) {
             e.printStackTrace();
         }

@@ -1,14 +1,19 @@
 package com.example.lyrichud;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.widget.Toast;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class PermissionHelper {
 
@@ -16,6 +21,11 @@ public class PermissionHelper {
     private static final String KEY_AUTO_START_SHOWN = "autoStartDialogShown";
     private static final String KEY_BATTERY_DIALOG_SHOWN = "batteryDialogShown";
 
+    private static final int WIFI_PERMISSION_REQUEST_CODE = 1002;
+
+    private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 1003;
+    private static final int BLUETOOTH_ADMIN_PERMISSION_REQUEST_CODE = 1004;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1005;
 
     public static void checkAutoStartPermission(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -84,6 +94,49 @@ public class PermissionHelper {
             Intent fallback = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             fallback.setData(Uri.fromParts("package", context.getPackageName(), null));
             context.startActivity(fallback);
+        }
+    }
+
+    // 检查 NEARBY_WIFI_DEVICES 权限
+    public static boolean checkWifiPermission(Context context) {
+        return ContextCompat.checkSelfPermission(context, android.Manifest.permission.NEARBY_WIFI_DEVICES) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // 请求 NEARBY_WIFI_DEVICES 权限
+    public static void requestWifiPermission(Context context) {
+        if (!PermissionHelper.checkWifiPermission(context)) {
+            ActivityCompat.requestPermissions((Activity) context,
+                    new String[]{android.Manifest.permission.NEARBY_WIFI_DEVICES}, WIFI_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+
+    // 检查是否有 BLE 广播权限
+    public static boolean checkBluetoothPermission(Context context) {
+        return ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // 请求 BLE 广播权限
+    public static void requestBluetoothPermission(Context context) {
+        if (!checkBluetoothPermission(context)) {
+            ActivityCompat.requestPermissions((Activity) context,
+                    new String[]{android.Manifest.permission.BLUETOOTH, android.Manifest.permission.BLUETOOTH_ADMIN},
+                    BLUETOOTH_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    // 检查是否有定位权限（用于 BLE 扫描）
+    public static boolean checkLocationPermission(Context context) {
+        return ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // 请求定位权限
+    public static void requestLocationPermission(Context context) {
+        if (!checkLocationPermission(context)) {
+            ActivityCompat.requestPermissions((Activity) context,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
 }
