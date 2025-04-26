@@ -1,36 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:animateLayoutChanges="true"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-
-    <!-- res/layout/activity_main.xml -->
-    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/activity_main_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="90dp"
+        app:contentInsetStart="0dp"
+        app:contentInsetStartWithNavigation="0dp" />
 
-        <Button
-            android:id="@+id/toggleButton"
-            android:layout_width="200dp"
-            android:layout_height="56dp"
-            android:layout_gravity="center"
-            android:background="@drawable/button_bg"
-            android:text="关闭服务"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textAllCaps="false" />
-    </FrameLayout>
+    <include layout="@layout/toggle_button" />
 
+    <LinearLayout
+        android:id="@+id/status_notice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="30dp"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="246dp"
-        android:layout_height="203dp"
-        android:text="期房大傻逼"
-        tools:layout_editor_absoluteX="63dp"
-        tools:layout_editor_absoluteY="96dp"
-        tools:text="期房大傻逼" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <include layout="@layout/status_item" />
+
+        <include layout="@layout/status_item" />
+
+        <include layout="@layout/status_item" />
+
+        <include layout="@layout/status_item" />
+
+        <include layout="@layout/status_item" />
+
+    </LinearLayout>
+</LinearLayout>

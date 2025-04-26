@@ -1,10 +1,8 @@
-package com.example.lyrichud;
+package com.example.lyrichud.service;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.LocalOnlyHotspotReservation;
 import android.os.Build;
@@ -12,14 +10,15 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
-import com.example.lyrichud.inter.OnHotspotStartedListener;
+import com.example.lyrichud.service.inter.OnHotspotStateChangeListener;
 
 public class WifiHotspotManager {
 
     private Context context;
     private WifiManager wifiManager;
     private LocalOnlyHotspotReservation currentHotspot;
-    private OnHotspotStartedListener hotspotStartedListener;
+    private OnHotspotStateChangeListener hotspotStateChangeListener;
+
 
     public WifiHotspotManager(Context context) {
         this.context = context;
@@ -51,12 +50,10 @@ public class WifiHotspotManager {
                 String password = reservation.getWifiConfiguration().preSharedKey;
                 Toast.makeText(context, "热点已启动: " + ssid, Toast.LENGTH_SHORT).show();
 
-                if (hotspotStartedListener != null) {
-                    hotspotStartedListener.onStarted(ssid, password);
+                if (hotspotStateChangeListener != null) {
+                    hotspotStateChangeListener.onHotspotEnabled(ssid, password);
                 }
 
-                // 获取当前连接的设备 IP 地址
-                getConnectedDeviceIp();
             }
 
             @Override
@@ -67,37 +64,26 @@ public class WifiHotspotManager {
         }, null);
     }
 
-    // 获取当前连接的设备 IP 地址
-    private void getConnectedDeviceIp() {
-        if (wifiManager != null) {
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-            int ipAddress = wifiInfo.getIpAddress();
-
-            @SuppressLint("DefaultLocale") String ip = String.format("%d.%d.%d.%d",
-                    (ipAddress & 0xff),
-                    (ipAddress >> 8 & 0xff),
-                    (ipAddress >> 16 & 0xff),
-                    (ipAddress >> 24 & 0xff));
-
-            Toast.makeText(context, "当前连接设备的 IP 地址: " + ip, Toast.LENGTH_SHORT).show();
-        }
-    }
-
     // 释放热点
     public void stopHotspot() {
         if (currentHotspot != null) {
             Toast.makeText(context, "热点已经关闭！", Toast.LENGTH_SHORT).show();
-            
+
             // 停止热点
             if (currentHotspot != null) {
                 currentHotspot.close();
                 currentHotspot = null; // 确保释放引用
             }
+
+            if (hotspotStateChangeListener != null) {
+                hotspotStateChangeListener.onHotspotDisabled();
+            }
         }
     }
 
-    public void setOnHotspotStartedListener(OnHotspotStartedListener listener) {
-        this.hotspotStartedListener = listener;
+    public void setOnHotspotStateChangeListener(OnHotspotStateChangeListener listener) {
+        this.hotspotStateChangeListener = listener;
     }
+
 
 }

@@ -1,11 +1,11 @@
-package com.example.lyrichud;
+package com.example.lyrichud.python;
 
 import com.chaquo.python.PyException;
 import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
-import com.example.lyrichud.inter.LyricsSyncer;
+import com.example.lyrichud.MainActivity;
 
-public class PythonBridge implements LyricsSyncer {
+public class PythonBridge implements OnLyricsSyncer {
 
     private static PythonBridge instance;
     private final PyObject pyMain;
@@ -29,7 +29,7 @@ public class PythonBridge implements LyricsSyncer {
     @Override
     public void sendSongInfo(String id, long position, String image, boolean status, String title, String artist, long duration) {
         try {
-            manager.callAttr("send_kugou_lyrics", id, position, image, status, title, artist, duration);
+            manager.callAttr("send_kugou_lyrics", MainActivity.raspberry_ip, id, position, image, status, title, artist, duration);
         } catch (PyException e) {
             e.printStackTrace();
         }
@@ -38,7 +38,7 @@ public class PythonBridge implements LyricsSyncer {
     @Override
     public void sendPlayState(boolean status, long position) {
         try {
-            manager.callAttr("sync_play_state", status, position);
+            manager.callAttr("sync_play_state", MainActivity.raspberry_ip, status, position);
         } catch (PyException e) {
             e.printStackTrace();
         }

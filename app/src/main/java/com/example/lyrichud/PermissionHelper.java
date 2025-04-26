@@ -2,6 +2,7 @@ package com.example.lyrichud;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -20,12 +21,15 @@ public class PermissionHelper {
     private static final String PREFS_NAME = "PermissionPrefs";
     private static final String KEY_AUTO_START_SHOWN = "autoStartDialogShown";
     private static final String KEY_BATTERY_DIALOG_SHOWN = "batteryDialogShown";
-
     private static final int WIFI_PERMISSION_REQUEST_CODE = 1002;
-
     private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 1003;
     private static final int BLUETOOTH_ADMIN_PERMISSION_REQUEST_CODE = 1004;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1005;
+    private BluetoothAdapter bluetoothAdapter;
+
+    public PermissionHelper(BluetoothAdapter bluetoothAdapter) {
+        this.bluetoothAdapter = bluetoothAdapter;
+    }
 
     public static void checkAutoStartPermission(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -139,4 +143,19 @@ public class PermissionHelper {
                     LOCATION_PERMISSION_REQUEST_CODE);
         }
     }
+
+    // 检查蓝牙是否开启
+    public static boolean requestBluetoothEnabled(Context context) {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (!bluetoothAdapter.isEnabled()) {
+            // 蓝牙未开启，提示用户开启蓝牙
+            Toast.makeText(context, "请开启蓝牙", Toast.LENGTH_LONG).show();
+            // 可以弹出提示或请求用户打开蓝牙
+            return false;
+        }
+        return true;
+    }
+
+
 }

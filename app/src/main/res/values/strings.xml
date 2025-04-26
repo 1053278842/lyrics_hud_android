@@ -1,4 +1,20 @@
 <resources>
     <string name="app_name">LyricHud</string>
-    <string name="accessibility_description">的</string>
+    <string name="launch_name">Clash</string>
+    <string name="application_name">Clash for Android</string>
+
+    <string name="button_status_stopped">已停止</string>
+    <string name="button_status_click_to_start">点击启动</string>
+    <string name="button_status_running">运行中</string>
+    <string name="button_status_click_to_stop">点击关闭</string>
+    <string name="button_status_started">Running</string>
+    <string name="button_status_forwarded_traffic">%s Forwarded</string>
+
+
+    <string name="notice">通知监听</string>
+    <string name="hotspot">热点状态</string>
+    <string name="ble">蓝牙广播</string>
+    <string name="peripheral">外设链接</string>
+    <string name="musicBar">音乐状态</string>
+
 </resources>

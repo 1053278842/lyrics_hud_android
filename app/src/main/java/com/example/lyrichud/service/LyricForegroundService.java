@@ -1,4 +1,4 @@
-package com.example.lyrichud;
+package com.example.lyrichud.service;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -24,22 +24,31 @@ import androidx.core.app.NotificationCompat;
 
 import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
-import com.example.lyrichud.inter.LyricsSyncer;
+import com.example.lyrichud.MyNotificationListenerService;
+import com.example.lyrichud.R;
+import com.example.lyrichud.python.OnLyricsSyncer;
+import com.example.lyrichud.python.PythonBridge;
+import com.example.lyrichud.service.inter.OnLyricBarChangeListener;
 
 import java.util.List;
 import java.util.Set;
 
 public class LyricForegroundService extends Service {
+    private static OnLyricBarChangeListener statusListener;
     private final String TAG = "LyricHud";
     private final Handler handler = new Handler(Looper.getMainLooper());
     private MediaController kugouController;
     private boolean controllerInitialized = false;
-    private LyricsSyncer pythonBridge;
+    private OnLyricsSyncer pythonBridge;
     // 去重缓存变量
     private String lastTitle = null;
     private String lastArtist = null;
     private long lastPosition = -2;
     private int lastState = -1;
+
+    public static void setStatusListener(OnLyricBarChangeListener listener) {
+        statusListener = listener;
+    }
 
     @Override
     public void onCreate() {
@@ -57,7 +66,9 @@ public class LyricForegroundService extends Service {
 
         // 启动轮询
         handler.post(pollingRunnable);
-
+        if (statusListener != null) {
+            statusListener.onServiceStateListener(true);
+        }
     }
 
     private void createAndStartForeground() {
@@ -95,6 +106,7 @@ public class LyricForegroundService extends Service {
                             kugouController = controller;
                             kugouController.registerCallback(kugouCallback);
                             controllerInitialized = true;
+                            statusListener.onKugouAppConnected();
                             Log.d(TAG, "🔁 MediaSession 变更，重新绑定回调");
                             triggerCallbacks();
                         }
@@ -106,6 +118,7 @@ public class LyricForegroundService extends Service {
                     kugouController.unregisterCallback(kugouCallback);
                     kugouController = null;
                     controllerInitialized = false;
+                    statusListener.onKugouAppDisconnected();
                     Log.d(TAG, "🛑 酷狗已关闭，清空 MediaController");
                     // 酷狗关闭，推送空数据屏蔽在显示的歌词。
                     pythonBridge.sendSongInfo("", 0, null, false, "", "", 0);
@@ -167,13 +180,7 @@ public class LyricForegroundService extends Service {
                 }
             }
         }
-    }    private final Runnable pollingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            refreshMediaControllerIfNeeded();
-            handler.postDelayed(this, 1000);  // 保留每秒检查是否已初始化
-        }
-    };
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -192,7 +199,8 @@ public class LyricForegroundService extends Service {
         // 确保通知被取消
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(1);  // 根据通知ID取消
-
+        statusListener.onServiceStateListener(false);
+        statusListener.onKugouAppDisconnected();
         Log.d(TAG, "进程终止!");
     }
 
@@ -200,8 +208,15 @@ public class LyricForegroundService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
+    }    //
 
+    private final Runnable pollingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            refreshMediaControllerIfNeeded();
+            handler.postDelayed(this, 1000);  // 保留每秒检查是否已初始化
+        }
+    };
 
 
     private final MediaController.Callback kugouCallback = new MediaController.Callback() {
