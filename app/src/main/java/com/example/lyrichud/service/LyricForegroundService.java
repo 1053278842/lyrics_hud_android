@@ -11,8 +11,8 @@ import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
+import android.os.Binder;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -26,17 +26,18 @@ import com.chaquo.python.Python;
 import com.chaquo.python.android.AndroidPlatform;
 import com.example.lyrichud.MyNotificationListenerService;
 import com.example.lyrichud.R;
+import com.example.lyrichud.model.StatusModel;
 import com.example.lyrichud.python.OnLyricsSyncer;
 import com.example.lyrichud.python.PythonBridge;
 import com.example.lyrichud.service.inter.OnLyricBarChangeListener;
 
 import java.util.List;
-import java.util.Set;
 
 public class LyricForegroundService extends Service {
     private static OnLyricBarChangeListener statusListener;
     private final String TAG = "LyricHud";
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private final IBinder binder = new LocalBinder();
     private MediaController kugouController;
     private boolean controllerInitialized = false;
     private OnLyricsSyncer pythonBridge;
@@ -46,9 +47,6 @@ public class LyricForegroundService extends Service {
     private long lastPosition = -2;
     private int lastState = -1;
 
-    public static void setStatusListener(OnLyricBarChangeListener listener) {
-        statusListener = listener;
-    }
 
     @Override
     public void onCreate() {
@@ -64,11 +62,7 @@ public class LyricForegroundService extends Service {
         // 实例化推送接口，pythonBridge是使用python实现的接口实现
         pythonBridge = PythonBridge.getInstance();
 
-        // 启动轮询
         handler.post(pollingRunnable);
-        if (statusListener != null) {
-            statusListener.onServiceStateListener(true);
-        }
     }
 
     private void createAndStartForeground() {
@@ -106,9 +100,11 @@ public class LyricForegroundService extends Service {
                             kugouController = controller;
                             kugouController.registerCallback(kugouCallback);
                             controllerInitialized = true;
-                            statusListener.onKugouAppConnected();
+
+                            this.triggerCallbacks();
+                            StatusModel.getInstance().setCatchMusicBar(true);
                             Log.d(TAG, "🔁 MediaSession 变更，重新绑定回调");
-                            triggerCallbacks();
+//                            triggerCallbacks();
                         }
                         return;  // 找到了，提前返回
                     }
@@ -118,10 +114,10 @@ public class LyricForegroundService extends Service {
                     kugouController.unregisterCallback(kugouCallback);
                     kugouController = null;
                     controllerInitialized = false;
-                    statusListener.onKugouAppDisconnected();
-                    Log.d(TAG, "🛑 酷狗已关闭，清空 MediaController");
-                    // 酷狗关闭，推送空数据屏蔽在显示的歌词。
+                    // 推送空格数据，中断外设
                     pythonBridge.sendSongInfo("", 0, null, false, "", "", 0);
+                    StatusModel.getInstance().setCatchMusicBar(false);
+                    Log.d(TAG, "🛑 酷狗已关闭，清空 MediaController");
                 }
             } catch (SecurityException e) {
                 Log.e(TAG, "❌ 获取 MediaSession 权限失败：请确保已授予通知访问权限", e);
@@ -129,7 +125,7 @@ public class LyricForegroundService extends Service {
         }
     }
 
-    private void triggerCallbacks() {
+    public void triggerCallbacks() {
         if (kugouController != null) {
             // 手动触发 onMetadataChanged
             MediaMetadata metadata = kugouController.getMetadata();
@@ -146,37 +142,10 @@ public class LyricForegroundService extends Service {
                 // 手动触发 onPlaybackStateChanged
                 PlaybackState state = kugouController.getPlaybackState();
                 if (state != null) {
-
-
                     long pos = state.getPosition();
                     int s = state.getState();
                     Log.d(TAG, (s == PlaybackState.STATE_PLAYING ? "▶ 正在播放" : "⏸ 已暂停") + "，位置: " + pos);
                     pythonBridge.sendSongInfo(title + artist, pos, null, s == PlaybackState.STATE_PLAYING, title, artist, duration);
-
-                    List<PlaybackState.CustomAction> customActions = state.getCustomActions();
-                    if (customActions != null && !customActions.isEmpty()) {
-                        for (PlaybackState.CustomAction action : customActions) {
-                            Log.d(TAG, "CustomAction id=" + action.getAction()
-                                    + ", name=" + action.getName()
-                                    + ", icon=" + action.getIcon()
-                                    + ", extras=" + action.getExtras());
-                            // 假设 action 是 PlaybackState.CustomAction
-                            Bundle extras = action.getExtras();
-                            if (extras != null && !extras.isEmpty()) {
-                                Set<String> keys = extras.keySet();  // 返回所有键的集合 :contentReference[oaicite:2]{index=2}
-                                Log.d(TAG, "Extras 包含 " + keys.size() + " 项");
-                                for (String key : keys) {
-                                    Object value = extras.get(key);   // 根据键取值
-                                    Log.d(TAG, "Extra Key=\"" + key + "\", Value=\"" + value + "\"");
-                                }
-                            } else {
-                                Log.d(TAG, "CustomAction extras 为空");
-                            }
-                        }
-                    } else {
-                        Log.d(TAG, "No custom actions in playback state");
-                    }
-
                 }
             }
         }
@@ -184,6 +153,7 @@ public class LyricForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        StatusModel.getInstance().setNotificationListening(true);
         return START_STICKY;
     }
 
@@ -199,16 +169,23 @@ public class LyricForegroundService extends Service {
         // 确保通知被取消
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(1);  // 根据通知ID取消
-        statusListener.onServiceStateListener(false);
-        statusListener.onKugouAppDisconnected();
+        StatusModel.getInstance().setNotificationListening(false);
         Log.d(TAG, "进程终止!");
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
-    }    //
+        return new LocalBinder();
+    }
+
+
+    // 让外部可以获取到service对象
+    public class LocalBinder extends Binder {
+        public LyricForegroundService getService() {
+            return LyricForegroundService.this;
+        }
+    }
 
     private final Runnable pollingRunnable = new Runnable() {
         @Override
@@ -243,6 +220,13 @@ public class LyricForegroundService extends Service {
                             kugouCallback.onPlaybackStateChanged(kugouController.getPlaybackState());
                         }
                     }, 5000);
+                    // 延迟 5 秒调用一次 onPlaybackStateChanged
+                    handler.postDelayed(() -> {
+                        if (kugouController != null && kugouController.getPlaybackState() != null) {
+                            Log.d(TAG, "切歌后10s,自动同步一次进度*减少误差*");
+                            kugouCallback.onPlaybackStateChanged(kugouController.getPlaybackState());
+                        }
+                    }, 10000);
                 }
             }
         }

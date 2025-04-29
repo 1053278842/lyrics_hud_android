@@ -150,7 +150,16 @@ public class PermissionHelper {
 
         if (!bluetoothAdapter.isEnabled()) {
             // 蓝牙未开启，提示用户开启蓝牙
-            Toast.makeText(context, "请开启蓝牙", Toast.LENGTH_LONG).show();
+//            Toast.makeText(context, "请开启蓝牙", Toast.LENGTH_LONG).show();
+            // 跳转到蓝牙设置页面
+            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                // 权限未被授予，向用户请求权限
+                ActivityCompat.requestPermissions((Activity) context,
+                        new String[]{android.Manifest.permission.BLUETOOTH_CONNECT},
+                        1);
+            }
+            context.startActivity(intent);
             // 可以弹出提示或请求用户打开蓝牙
             return false;
         }

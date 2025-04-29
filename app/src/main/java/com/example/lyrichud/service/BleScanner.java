@@ -42,6 +42,9 @@ public class BleScanner {
                         data[3] & 0xFF);
 
                 if (!Objects.equals(current_ip, ip)) {
+//                    if ("0.0.0.0".equals(current_ip)) {
+//                        return;
+//                    }
                     Log.d("BLE", "找到IP：" + ip);
                     current_ip = ip;
                     if (peripheralConnectListener != null) {

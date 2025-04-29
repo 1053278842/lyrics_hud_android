@@ -48,7 +48,7 @@ public class WifiHotspotManager {
                 currentHotspot = reservation;
                 String ssid = reservation.getWifiConfiguration().SSID;
                 String password = reservation.getWifiConfiguration().preSharedKey;
-                Toast.makeText(context, "热点已启动: " + ssid, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, "热点已启动: " + ssid, Toast.LENGTH_SHORT).show();
 
                 if (hotspotStateChangeListener != null) {
                     hotspotStateChangeListener.onHotspotEnabled(ssid, password);
@@ -67,7 +67,7 @@ public class WifiHotspotManager {
     // 释放热点
     public void stopHotspot() {
         if (currentHotspot != null) {
-            Toast.makeText(context, "热点已经关闭！", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "热点已经关闭！", Toast.LENGTH_SHORT).show();
 
             // 停止热点
             if (currentHotspot != null) {
