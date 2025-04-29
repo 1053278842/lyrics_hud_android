@@ -79,7 +79,7 @@ public class LyricForegroundService extends Service {
         Notification notification = new NotificationCompat.Builder(this, channelId)
                 .setContentTitle("歌词助手")
                 .setContentText("正在后台轮询播放状态…")
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.loge)
                 .setOngoing(true)      // 持久通知 :contentReference[oaicite:9]{index=9}
                 .build();
         startForeground(1, notification);

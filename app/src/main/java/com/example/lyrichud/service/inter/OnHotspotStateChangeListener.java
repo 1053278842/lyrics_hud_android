@@ -6,5 +6,5 @@ package com.example.lyrichud.service.inter;
 public interface OnHotspotStateChangeListener {
     void onHotspotEnabled(String ssid, String password);
 
-    void onHotspotDisabled();
+    void onHotspotDisabled(String ssid);
 }

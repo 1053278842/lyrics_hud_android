@@ -69,15 +69,16 @@ public class WifiHotspotManager {
         if (currentHotspot != null) {
 //            Toast.makeText(context, "热点已经关闭！", Toast.LENGTH_SHORT).show();
 
+            if (hotspotStateChangeListener != null) {
+                String ssid = currentHotspot.getWifiConfiguration().SSID;
+                hotspotStateChangeListener.onHotspotDisabled(ssid);
+            }
             // 停止热点
             if (currentHotspot != null) {
                 currentHotspot.close();
                 currentHotspot = null; // 确保释放引用
             }
 
-            if (hotspotStateChangeListener != null) {
-                hotspotStateChangeListener.onHotspotDisabled();
-            }
         }
     }
 

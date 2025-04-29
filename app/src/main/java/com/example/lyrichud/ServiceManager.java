@@ -45,8 +45,12 @@ public class ServiceManager {
             }
 
             @Override
-            public void onHotspotDisabled() {
+            public void onHotspotDisabled(String ssid) {
                 Log.d("ServiceManager", "WIFI热点已关闭！");
+                // 开启 BLE 广播
+                String shortCode = ssid.substring(ssid.lastIndexOf("_") + 1); // "AndroidShare_4289"->"4289"
+                bleAdvertiser.startAdvertising(shortCode, "disconnect");
+
                 StatusModel.getInstance().setHotspotOn(false);
                 StatusModel.getInstance().setPeripheralConnected(false);
             }
