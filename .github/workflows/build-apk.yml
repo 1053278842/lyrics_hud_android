@@ -27,11 +27,20 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: 安装 SDK 34
-        run: sdkmanager --install "platforms;android-34" "build-tools;34.0.0" > /dev/null
+      - name: 准备 Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          if ! command -v sdkmanager >/dev/null 2>&1; then
+            echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+            export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+          fi
+          sdkmanager --version || true
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -5
+          echo "--- 已安装的平台 ---"
+          ls "$ANDROID_HOME/platforms" || true
+          ls "$ANDROID_HOME/build-tools" || true
 
       - name: Gradle 缓存
         uses: actions/cache@v4
