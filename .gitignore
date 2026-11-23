@@ -14,3 +14,7 @@
 .cxx
 local.properties
 /.idea/
+
+# Python（Chaquopy 源码里不要带缓存）
+__pycache__/
+*.pyc

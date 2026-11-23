@@ -12,23 +12,28 @@ android {
         minSdk 28
         targetSdk 34
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
+
+        // 只保留手机常用的两个 ABI，APK 体积能小一半
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            abiFilters "arm64-v8a", "armeabi-v7a"
         }
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         python {
-            // 这里指定 Python 版本
-            buildPython "C:/Users/10532/AppData/Local/Programs/Python/Python311/python.exe"
-            // 根据你的 Python 安装路径调整
+            // Windows 上必须显式告诉 Chaquopy 用哪个 Python 来打包依赖：
+            //   ./gradlew assembleDebug -PbuildPython=C:/Python311/python.exe
+            // 或者设环境变量 CHAQUOPY_BUILD_PYTHON
+            // Linux / macOS 不填也能自动找到 python3
+            def buildPy = project.findProperty("buildPython") ?: System.getenv("CHAQUOPY_BUILD_PYTHON")
+            if (buildPy) {
+                buildPython buildPy
+            }
+
+            // App 只走酷狗这条路（main.py → LyricsAdapterFactory → Kugou），
+            // 所以只装它真正 import 的两个包。
+            // Spotify 那套（api/totp/SpotifyLyricsListener）没有打进 APK。
             pip {
-                install "Flask==3.0.3"
-                install "flask_cors==5.0.0"
-                install "Flask_SocketIO==5.5.1"
-                install "pyotp==2.9.0"
                 install "requests==2.32.3"
-                install "spotipy==2.25.1"
                 install "ll-kugou-lyric-api==0.1.4"
             }
         }
@@ -44,24 +49,23 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
-}
-
-chaquopy {
-    sourceSets {
-        main {
-            srcDir "C:/mycode/vscode/lyrics"
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
         }
     }
 }
 
-dependencies {
+// Python 源码在 app/src/main/python（Chaquopy 默认路径）。
+// 它是从 LyricsDisplay 仓库同步过来的：
+//   bash scripts/sync_python.sh
+// 不要直接改这里的 main.py / lyrics/，改上游再同步。
 
+dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-
 }

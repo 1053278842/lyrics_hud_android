@@ -1,0 +1,75 @@
+name: Build APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Python 3.11（Chaquopy 打包依赖用）
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 安装 SDK 34
+        run: sdkmanager --install "platforms;android-34" "build-tools;34.0.0" > /dev/null
+
+      - name: Gradle 缓存
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+
+      - name: 编译 debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon -PbuildPython="$(command -v python3)"
+
+      - name: 重命名产物
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/LyricHud-${GITHUB_REF_NAME:-dev}.apk"
+          ls -lh dist
+
+      - name: 上传 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LyricHud-apk
+          path: dist/*.apk
+
+      - name: 发布 Release（仅 tag）
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk
+          generate_release_notes: true
+          body: |
+            ## 安装说明
+
+            - 这是 **debug 签名** 的 APK，用于个人使用
+            - 如果手机上已经装过别的签名的版本，**需要先卸载**再安装
+            - 首次打开请授予：通知使用权、定位、附近的设备（蓝牙）、后台运行/自启动
+
+            配套的树莓派端代码：[LyricsDisplay](https://github.com/1053278842/LyricsDisplay)
