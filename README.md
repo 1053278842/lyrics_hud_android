@@ -24,7 +24,9 @@ App 里用 **Chaquopy** 内嵌了 Python，歌词的抓取/格式化复用树莓
 
 ## 下载安装
 
-到 [Releases](../../releases) 下载最新的 `LyricHud-*.apk`。
+[![最新版本](https://img.shields.io/github/v/release/1053278842/lyrics_hud_android?label=%E4%B8%8B%E8%BD%BD&color=00c853)](https://github.com/1053278842/lyrics_hud_android/releases/latest)
+
+👉 **[下载最新 APK](https://github.com/1053278842/lyrics_hud_android/releases/latest)**（当前 `v1.0.0`，约 24 MB）
 
 > ⚠️ 这是 **debug 签名**的个人自用包。如果手机上装过别人编译的版本，会提示签名冲突，**需要先卸载**。
 
